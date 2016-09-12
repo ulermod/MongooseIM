@@ -38,7 +38,8 @@ all() ->
      {group, acks},
 
      {group, essential_https},
-     {group, chat_https}
+     {group, chat_https},
+     {group, interleave_requests_statem}
      ].
 
 groups() ->
@@ -47,7 +48,10 @@ groups() ->
      {chat, [shuffle], chat_test_cases()},
      {chat_https, [shuffle], chat_test_cases()},
      {time, [parallel], time_test_cases()},
-     {acks, [shuffle], acks_test_cases()}].
+     {acks, [shuffle], acks_test_cases()},
+     {interleave_requests_statem, [parallel], [interleave_requests_statem,
+                                               interleave_requests_statem_https]
+     }].
 
 suite() ->
     escalus:suite().
@@ -63,7 +67,6 @@ essential_test_cases() ->
 
 chat_test_cases() ->
     [interleave_requests,
-     interleave_requests_statem,
      simple_chat,
      cdata_escape_chat,
      escape_attr_chat,
@@ -294,7 +297,10 @@ interleave_requests(Config) ->
     end).
 
 interleave_requests_statem(Config) ->
-    true = bosh_interleave_reqs:test(Config).
+    true = bosh_interleave_reqs:test([{user, carol} | Config]).
+
+interleave_requests_statem_https(Config) ->
+    interleave_requests_statem([{user, carol_s} | Config]).
 
 interleave_requests_escalus(Config) ->
     escalus:story(Config, [{geralt, 1}], fun(Geralt) ->
