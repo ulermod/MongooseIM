@@ -49,13 +49,10 @@ prop(Config) ->
 			   end)).
 
 ct_config_giver(Config) ->
-    wait_for_request(Config).
-
-wait_for_request(Config) ->
     receive
         {give_me_config, Pid} ->
             Pid ! {ok, Config},
-            wait_for_request(Config)
+            ct_config_giver(Config)
     end.
 
 maybe_stop_client(undefined) -> ok;
@@ -138,7 +135,7 @@ connect_user(Spec) ->
     {ok, Conn, Props, _} = escalus_connection:start([{resource, Res} | Spec]),
     JID = make_jid(Props),
     escalus:send(Conn, escalus_stanza:presence(<<"available">>)),
-    escalus:wait_for_stanza(Conn),
+    escalus:wait_for_stanza(Conn, timer:seconds(5)),
     Conn#client{jid = JID}.
 
 make_jid(Proplist) ->
@@ -167,7 +164,7 @@ gen_msg() ->
 
 wait_for_msgs_carol(Carol, Msgs) ->
     L = length(Msgs),
-    Stanzas = escalus:wait_for_stanzas(Carol, L),
+    Stanzas = escalus:wait_for_stanzas(Carol, L, timer:seconds(5)),
     RMsgs = [exml_query:path(E, [{element, <<"body">>}, cdata])
              || E <- Stanzas],
     SortedMsgs = lists:sort([Msg || {_, Msg} <- Msgs]),
@@ -182,6 +179,6 @@ wait_for_msgs(_Client, []) ->
     ok;
 wait_for_msgs(Client, [{_, Msg} | Rest]) ->
     escalus:assert(is_chat_message, [Msg],
-                   escalus:wait_for_stanza(Client)),
+                   escalus:wait_for_stanza(Client, timer:seconds(5))),
     wait_for_msgs(Client, Rest).
 
