@@ -119,7 +119,7 @@ connect_carol(Pid) ->
     connect_user([{keepalive, true} | Spec]).
 
 connect_geralt(Pid) ->
-    Spec = given_fresh_spec(read_config(Pid), geralt),
+    Spec = given_fresh_spec(read_config(Pid), alice),
     connect_user(Spec).
 
 given_fresh_spec(Config, User) ->
