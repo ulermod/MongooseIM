@@ -31,8 +31,9 @@
 %%--------------------------------------------------------------------
 
 all() ->
-    [{group, routing},
-     conf_reload].
+    [%{group, routing},
+     start_cowboy_returns_error_eaddrinuse].
+     %conf_reload].
 
 groups() ->
     [{routing, [sequence], [http_requests,
@@ -201,6 +202,12 @@ mixed_requests(_Config) ->
 
     %% Then
     Responses = lists:duplicate(50, {TextPong, true, TextPong, true}).
+
+start_cowboy_returns_error_eaddrinuse(_C) ->
+    Opts = [{port, 8088}, {ip, {127, 0, 0, 1}}, {modules, []}, {retires, {2, 10}}],
+    {ok, _Pid} = ejabberd_cowboy:start_cowboy(a_ref, Opts),
+    Result = ejabberd_cowboy:start_cowboy(a_ref_2, Opts),
+    {error, eaddrinuse} = Result.
 
 conf_reload(Config) ->
     %% Given initial configuration
